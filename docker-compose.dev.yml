@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Node.js App
+  app:
+    build:
+      context: .
+      target: development
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - db
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_NAME=mydatabase
+      - DB_PORT=5432
+    command: >
+      sh -c "
+        npm install &&
+        npx sequelize-cli db:migrate --debug &&
+        npm run dev
+      "
+
+  # PostgreSQL Database
+  db:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

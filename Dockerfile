@@ -1,20 +1,45 @@
-# Use an official Node.js runtime as a parent image
-FROM node:18-alpine
+# Development Stage
+FROM node:18-alpine AS development
 
-# Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
-
-# Install any needed packages
 RUN npm install
 
-# Copy the rest of the application code to the working directory
 COPY . .
 
-# Make port 8080 available to the world outside this container
 EXPOSE 8080
-
-# Run the app when the container launches
 CMD ["npm", "run", "dev"]
+
+# Build Stage
+FROM node:18-alpine AS build
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+# Production Stage
+FROM node:18-alpine AS production
+
+WORKDIR /usr/src/app
+
+# Create a non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S appuser -u 1001 -G nodejs
+
+# Copy dependencies and source code from the build stage
+COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/src ./src
+
+# Set the owner of the files to the non-root user
+RUN chown -R appuser:nodejs .
+
+# Switch to the non-root user
+USER appuser
+
+EXPOSE 8080
+CMD ["npm", "start"]
+
