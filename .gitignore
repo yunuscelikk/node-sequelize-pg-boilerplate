@@ -1,1 +1,22 @@
-node_modules/
+# Dependencies
+/node_modules
+
+# Environment variables
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Docker
+.dockerignore
+.env
+.env.prod
+.env.test
+.env.dev
+docker-compose.yml
+
+# Sequelize
+.sequelizerc
